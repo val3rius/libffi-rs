@@ -45,9 +45,9 @@
 #![allow(improper_ctypes)]
 #![allow(unused_imports)]
 
-use std::fmt::{self, Debug};
-use std::mem::zeroed;
-use std::os::raw::{c_char, c_int, c_long, c_schar, c_uint, c_ulong, c_ushort, c_void};
+use core::ffi::{c_char, c_int, c_long, c_schar, c_uint, c_ulong, c_ushort, c_void};
+use core::fmt::{self, Debug};
+use core::mem::zeroed;
 
 mod arch;
 pub use arch::*;
@@ -61,7 +61,7 @@ pub type ffi_type_enum = u32;
 
 pub const FFI_64_BIT_MAX: u64 = 9223372036854775807;
 pub const FFI_CLOSURES: u32 = 1;
-pub const FFI_SIZEOF_ARG: usize = std::mem::size_of::<c_long>();
+pub const FFI_SIZEOF_ARG: usize = core::mem::size_of::<c_long>();
 // NOTE: This only differs from FFI_SIZEOF_ARG on ILP platforms, which Rust does not support
 pub const FFI_SIZEOF_JAVA_RAW: usize = FFI_SIZEOF_ARG;
 

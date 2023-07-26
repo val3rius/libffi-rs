@@ -17,8 +17,13 @@
 //! assert!((result - 5f32).abs() < 0.0001);
 //! ```
 
-use std::convert::TryInto;
-use std::marker::PhantomData;
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::{boxed::Box, slice, vec, vec::Vec};
+
+use core::convert::TryInto;
+use core::marker::PhantomData;
 
 use crate::middle;
 pub use middle::CodePtr;

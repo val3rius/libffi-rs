@@ -8,9 +8,16 @@
 //! aren’t checked. See the [`high`](crate::high) layer for closures
 //! with type-checked arguments.
 
-use std::any::Any;
-use std::marker::PhantomData;
-use std::os::raw::c_void;
+use core::any::Any;
+use core::ffi::c_void;
+use core::marker::PhantomData;
+
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::{boxed::Box, slice, vec, vec::Vec};
+#[cfg(not(feature = "no_std"))]
+use std::slice;
 
 use crate::low;
 pub use crate::low::{ffi_abi as FfiAbi, ffi_abi_FFI_DEFAULT_ABI, Callback, CallbackMut, CodePtr};
@@ -426,7 +433,12 @@ impl ClosureOnce {
 mod test {
     use super::*;
     use crate::low;
-    use std::os::raw::c_void;
+    use core::ffi::c_void;
+
+    #[cfg(feature = "no_std")]
+    extern crate alloc;
+    #[cfg(feature = "no_std")]
+    use alloc::vec;
 
     #[test]
     fn call() {
@@ -507,7 +519,7 @@ mod test {
         let clone_cif = cif.clone();
 
         unsafe {
-            let args = std::slice::from_raw_parts(cif.cif.arg_types, cif.cif.nargs as usize);
+            let args = slice::from_raw_parts(cif.cif.arg_types, cif.cif.nargs as usize);
             let struct_arg = args
                 .first()
                 .expect("CIF arguments slice was empty")
@@ -515,7 +527,7 @@ mod test {
                 .expect("CIF first argument was null");
             // Get slice of length 1 to get the first element
             let struct_size = struct_arg.size;
-            let struct_parts = std::slice::from_raw_parts(struct_arg.elements, 1);
+            let struct_parts = slice::from_raw_parts(struct_arg.elements, 1);
             let substruct_size = struct_parts
                 .first()
                 .expect("CIF struct argument's elements slice was empty")
@@ -524,7 +536,7 @@ mod test {
                 .size;
 
             let clone_args =
-                std::slice::from_raw_parts(clone_cif.cif.arg_types, clone_cif.cif.nargs as usize);
+                slice::from_raw_parts(clone_cif.cif.arg_types, clone_cif.cif.nargs as usize);
             let clone_struct_arg = clone_args
                 .first()
                 .expect("CIF arguments slice was empty")
@@ -532,7 +544,7 @@ mod test {
                 .expect("CIF first argument was null");
             // Get slice of length 1 to get the first element
             let clone_struct_size = clone_struct_arg.size;
-            let clone_struct_parts = std::slice::from_raw_parts(clone_struct_arg.elements, 1);
+            let clone_struct_parts = slice::from_raw_parts(clone_struct_arg.elements, 1);
             let clone_substruct_size = clone_struct_parts
                 .first()
                 .expect("Cloned CIF struct argument's elements slice was empty")

@@ -6,10 +6,10 @@
 //! and a result type, and libffi uses this to figure out how to set up
 //! a call to a function with those types.
 
+use core::fmt;
+use core::mem;
+use core::ptr;
 use libc;
-use std::fmt;
-use std::mem;
-use std::ptr;
 
 use crate::low;
 
@@ -453,6 +453,11 @@ impl TypeArray {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[cfg(feature = "no_std")]
+    extern crate alloc;
+    #[cfg(feature = "no_std")]
+    use alloc::vec;
 
     #[test]
     fn create_u64() {

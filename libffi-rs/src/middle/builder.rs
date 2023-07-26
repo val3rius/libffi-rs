@@ -1,4 +1,9 @@
-use std::any::Any;
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::{vec, vec::Vec};
+
+use core::any::Any;
 
 use super::types::Type;
 

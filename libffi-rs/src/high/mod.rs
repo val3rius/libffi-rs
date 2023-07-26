@@ -73,6 +73,11 @@ pub use crate::middle::{ffi_abi_FFI_DEFAULT_ABI, FfiAbi};
 pub mod types;
 pub use types::{CType, Type};
 
+#[cfg(feature = "no_std")]
+extern crate alloc;
+#[cfg(feature = "no_std")]
+use alloc::{boxed::Box, slice, vec, vec::Vec};
+
 pub mod call;
 pub use call::*;
 
@@ -84,8 +89,10 @@ macro_rules! abort_on_panic {
             fn drop(&mut self) {
                 // We do our best to ignore errors that occur during printing.
                 // If this panics anyway, that'll still just be a double-panic which leads to abort.
+                #[cfg(not(feature = "no_std"))]
                 let _ = writeln!(std::io::stderr(), $msg);
-                std::process::abort();
+
+                core::intrinsics::abort();
             }
         }
 
@@ -93,7 +100,7 @@ macro_rules! abort_on_panic {
         // If this panics, `b` will be dropped, triggering the bomb.
         $body;
         // Defuse the bomb.
-        std::mem::forget(b);
+        core::mem::forget(b);
     }};
 }
 
@@ -109,10 +116,20 @@ macro_rules! define_closure_mod {
         /// CIF and closure types organized by function arity.
         #[allow(clippy::too_many_arguments)]
         pub mod $module {
-            use std::any::Any;
-            use std::marker::PhantomData;
+            use core::any::Any;
+            use core::marker::PhantomData;
+
+            #[cfg(not(feature = "no_std"))]
             use std::{mem, process, ptr};
+            #[cfg(not(feature = "no_std"))]
             use std::io::{self, Write};
+
+            #[cfg(feature = "no_std")]
+            extern crate alloc;
+            #[cfg(feature = "no_std")]
+            use core::{mem, ptr};
+            #[cfg(feature = "no_std")]
+            use alloc::{vec};
 
             use super::*;
             use crate::{low, middle};
@@ -411,9 +428,14 @@ macro_rules! define_closure_mod {
                         });
                     } else {
                         // There is probably a better way to abort here.
+                        #[cfg(not(feature = "no_std"))]
                         let _ =
                             io::stderr().write(b"FnOnce closure already used");
+                        #[cfg(not(feature = "no_std"))]
                         process::exit(2);
+
+                        #[cfg(feature = "no_std")]
+                        core::intrinsics::abort();
                     }
                 }
             }
